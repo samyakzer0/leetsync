@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  airflow-standalone:
+    image: apache/airflow:2.10.0-python3.11
+    container_name: leetpulse-airflow
+    restart: always
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+      - SMTP_USER=${SMTP_USER:-space.message.app@gmail.com}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-ghqlmfyehdisvthp}
+      - NOTIFICATION_EMAIL=${NOTIFICATION_EMAIL:-theweb3book@gmail.com}
+      - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./daily_challenges:/opt/airflow/daily_challenges
+    ports:
+      - "8080:8080"
+    command: airflow standalone

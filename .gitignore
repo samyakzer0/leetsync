@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Environment Variables
+.env
+*.env
+
+# Airflow local artifacts
+airflow.db
+airflow.cfg
+logs/
+webserver_config.py
+standalone_admin_password.txt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
