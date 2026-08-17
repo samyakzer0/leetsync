@@ -5,12 +5,14 @@ services:
     image: apache/airflow:2.10.0-python3.11
     container_name: leetpulse-airflow
     restart: always
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
-      - SMTP_USER=${SMTP_USER:-space.message.app@gmail.com}
-      - SMTP_PASSWORD=${SMTP_PASSWORD:-ghqlmfyehdisvthp}
-      - NOTIFICATION_EMAIL=${NOTIFICATION_EMAIL:-theweb3book@gmail.com}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - NOTIFICATION_EMAIL=${NOTIFICATION_EMAIL}
       - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}

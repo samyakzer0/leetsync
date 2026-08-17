@@ -77,53 +77,9 @@ Keep your streak going and solve it today!
             server.login(smtp_user, smtp_password)
             server.send_message(msg)
 
-        print(f"✅ Real email successfully sent to {recipient}!")
+        print(f"Real email successfully sent to {recipient}!")
         return True
     except Exception as e:
-        print(f"❌ Failed to dispatch email: {e}")
+        print(f"Failed to dispatch email: {e}")
         return False
 
-
-def send_discord_webhook(
-    problem: Dict[str, Any],
-    matched_tags: List[str],
-    webhook_url: str
-) -> bool:
-    """Dispatches a rich embed card to a Discord webhook."""
-    if not webhook_url:
-        return False
-
-    q_id = problem["question_id"]
-    title = problem["title"]
-    diff = problem["difficulty"]
-    link = problem["link"]
-    matched_str = ", ".join(matched_tags) if matched_tags else "General Daily"
-
-    color_map = {"Easy": 0x00B8A3, "Medium": 0xFFC01E, "Hard": 0xFF375F}
-    embed_color = color_map.get(diff, 0x3498DB)
-
-    payload = {
-        "content": "🎯 **LeetCode Daily Challenge Alert:** Problem matches focus topics!" if matched_tags else "📚 **LeetCode Daily Challenge Available**",
-        "embeds": [
-            {
-                "title": f"#{q_id} - {title} ({diff})",
-                "url": link,
-                "color": embed_color,
-                "fields": [
-                    {"name": "🎯 Focus Topics", "value": matched_str, "inline": False},
-                    {"name": "Difficulty", "value": diff, "inline": True},
-                    {"name": "Date", "value": problem["date"], "inline": True}
-                ],
-                "footer": {"text": "LeetPulse Automation Bot"}
-            }
-        ]
-    }
-
-    try:
-        res = requests.post(webhook_url, json=payload, timeout=10)
-        if res.status_code in [200, 204]:
-            print("✅ Discord alert posted successfully!")
-            return True
-    except Exception as e:
-        print(f"⚠️ Discord webhook failed: {e}")
-    return False

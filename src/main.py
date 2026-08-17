@@ -14,29 +14,24 @@ from src.markdown_builder import build_and_save_markdown
 from src.notifier import send_priority_email, send_discord_webhook
 
 def main():
-    """Main workflow entrypoint for standalone CLI or GitHub Actions."""
-    print("==================================================")
     print("🚀 LeetPulse: Starting Daily POTD Tracker...")
-    print("==================================================")
 
-    # 1. Fetch Challenge
     problem = fetch_daily_question()
     if not problem:
         print("❌ Could not retrieve daily challenge. Exiting.")
         sys.exit(1)
 
-    # 2. Check Topic Matches
     matched_tags = match_focus_topics(problem["all_tags"], USER_TARGET_TAGS)
     if matched_tags:
-        print(f"🎯 Target Topic Match: {matched_tags}")
+        print(f"Target Topic Match: {matched_tags}")
     else:
-        print("ℹ️ No target topic match for today's challenge.")
+        print("No target topic match for today's challenge.")
 
-    # 3. Build & Save Markdown
+    
     saved_path = build_and_save_markdown(problem, matched_tags, OUTPUT_DIR)
-    print(f"✅ Markdown generated at: {saved_path}")
+    print(f"Markdown generated at: {saved_path}")
 
-    # 4. Dispatch Alerts
+ 
     if matched_tags:
         print("📧 Dispatching priority email notification...")
         send_priority_email(
@@ -52,11 +47,8 @@ def main():
         if DISCORD_WEBHOOK_URL:
             send_discord_webhook(problem, matched_tags, DISCORD_WEBHOOK_URL)
     else:
-        print("ℹ️ Skipping email notification (not in focus practice list).")
+        print("Skipping email notification (not in focus practice list).")
 
-    print("==================================================")
-    print("🎉 LeetPulse: Workflow Completed Successfully!")
-    print("==================================================")
 
 if __name__ == "__main__":
     main()

@@ -1,13 +1,10 @@
-name: LeetPulse Daily Challenge Tracker & Notifier
+name: LeetPulse Daily Challenge Notifier
 
 on:
   schedule:
     # Runs everyday at 00:30 UTC (6:00 AM IST)
     - cron: '30 0 * * *'
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
-
-permissions:
-  contents: write    # Grants permission to commit and push markdown files
 
 jobs:
   track-and-notify:
@@ -36,12 +33,3 @@ jobs:
           SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python -m src.main
-
-      - name: Commit and Push Daily Challenge
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add daily_challenges/
-          
-          # Only commit if there are new/modified files
-          git diff --staged --quiet || (git commit -m "docs(daily): archive LeetCode challenge for $(date +'%Y-%m-%d')" && git push)

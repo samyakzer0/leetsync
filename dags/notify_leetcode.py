@@ -29,10 +29,10 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-# Environment Variables & Credentials
-SMTP_USER = os.getenv("SMTP_USER", "space.message.app@gmail.com")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "ghqlmfyehdisvthp").replace(" ", "")
-NOTIFICATION_EMAIL = os.getenv("NOTIFICATION_EMAIL", "theweb3book@gmail.com")
+# Environment Variables & Credentials (reads from environment)
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
+NOTIFICATION_EMAIL = os.getenv("NOTIFICATION_EMAIL", "")
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")

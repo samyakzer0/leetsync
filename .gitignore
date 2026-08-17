@@ -20,7 +20,5 @@ logs/
 webserver_config.py
 standalone_admin_password.txt
 
-# IDEs
-.vscode/
-.idea/
-*.swp
+# Generated problem markdown output
+daily_challenges/
