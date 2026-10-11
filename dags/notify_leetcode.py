@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 # pyrefly: ignore [missing-import]
 from airflow.decorators import dag, task
 
-# User focus topics
+
 USER_TARGET = {
     "Dynamic Programming",
     "Graph",
@@ -22,14 +22,13 @@ USER_TARGET = {
     "Backtracking",
 }
 
-# Airflow default DAG arguments
+
 default_args = {
     'owner': 'samyak',
     'retries': 5,
     'retry_delay': timedelta(minutes=5),
 }
 
-# Environment Variables & Credentials (reads from environment)
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
 NOTIFICATION_EMAIL = os.getenv("NOTIFICATION_EMAIL", "")

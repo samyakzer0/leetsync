@@ -7,11 +7,10 @@ from src.config import (
     NOTIFICATION_EMAIL,
     SMTP_SERVER,
     SMTP_PORT,
-    DISCORD_WEBHOOK_URL
 )
 from src.leetcode_client import fetch_daily_question, match_focus_topics
 from src.markdown_builder import build_and_save_markdown
-from src.notifier import send_priority_email, send_discord_webhook
+from src.notifier import send_priority_email
 
 def main():
     print("🚀 LeetPulse: Starting Daily POTD Tracker...")
@@ -44,8 +43,7 @@ def main():
             smtp_port=SMTP_PORT
         )
 
-        if DISCORD_WEBHOOK_URL:
-            send_discord_webhook(problem, matched_tags, DISCORD_WEBHOOK_URL)
+        
     else:
         print("Skipping email notification (not in focus practice list).")
 

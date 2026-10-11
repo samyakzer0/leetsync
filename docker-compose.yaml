@@ -15,7 +15,7 @@ services:
       - NOTIFICATION_EMAIL=${NOTIFICATION_EMAIL}
       - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
-      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+     
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
