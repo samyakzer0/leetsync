@@ -31,5 +31,4 @@ jobs:
           NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER || 'smtp.gmail.com' }}
           SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python -m src.main
