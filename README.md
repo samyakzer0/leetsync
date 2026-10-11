@@ -1,150 +1,150 @@
-# 🚀 LeetPulse: Automated LeetCode POTD Pipeline & Smart Alerting Engine
+# LeetMeKnow — Daily LeetCode Data Pipeline
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python&logoColor=white)](https://python.org)
-[![Apache Airflow](https://img.shields.io/badge/Orchestration-Apache%20Airflow-017CEE.svg?logo=apache-airflow&logoColor=white)](https://airflow.apache.org)
-[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg?logo=github-actions&logoColor=white)](https://github.com/features/actions)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+LeetMeKnow ingests LeetCode's daily challenge through GraphQL, matches its tags against configurable focus topics, persists structured data in PostgreSQL, generates a Markdown archive, and sends a priority email when a topic matches. It runs locally with Python or under Apache Airflow in Docker.
 
-> **LeetPulse** is a dual-mode automated data pipeline that queries LeetCode's GraphQL API daily, parses complex problem schemas, auto-archives formatted Markdown documents directly into your GitHub repository to maintain your streak, and intelligently evaluates problem topic tags against your customized target practice sets to dispatch priority HTML email and Discord alerts.
-
----
-
-## 🌟 Key Features
-
-* **🔄 Dual-Mode Architecture:** Run serverless on **GitHub Actions (0 server maintenance)** or orchestrate with **Apache Airflow (TaskFlow API)**.
-* **🎯 Smart Topic Matcher:** Compares daily problem tags (`Dynamic Programming`, `Graph`, `Two Pointers`, `Binary Search`, etc.) against your target learning focus.
-* **📧 Rich HTML Email & Webhook Alerts:** Dispatches styled HTML email cards via SMTP and Discord webhook embeds when focus topics match.
-* **📝 Automated Git Problem Archiving:** Generates clean Markdown files with descriptions, tags, difficulty badges, and code starter stubs, auto-committing them to your repository daily.
-* **🐳 1-Click Docker Deployment:** Includes `docker-compose.yaml` to spin up a standalone Airflow environment in seconds.
-
----
-
-## 🏗️ System Architecture
+## Architecture
 
 ```mermaid
-graph TD
-    subgraph Triggers ["Execution Triggers"]
-        GA["GitHub Actions (00:30 UTC Cron)"]
-        AF["Apache Airflow TaskFlow DAG"]
-        CLI["Local CLI (python -m src.main)"]
-    end
-
-    subgraph Pipeline ["Core Pipeline"]
-        LC["LeetCode GraphQL API"] --> EXT["Extract Problem Metadata & Tags"]
-        EXT --> TMATCH{"Topic Matcher<br/>(Intersection with Focus Set)"}
-        
-        TMATCH --> GEN["Generate Structured Markdown File<br/>(daily_challenges/*.md)"]
-        GEN --> GIT["Git Auto-Commit & Push<br/>(Builds GitHub Archive Streak)"]
-        
-        TMATCH -- "🎯 Priority Focus Match" --> NOTIF["Dispatch HTML Email (SMTP) & Discord Webhook"]
-        TMATCH -- "ℹ️ General Topic" --> SKIP["Log Archive & Skip Email"]
-    end
-
-    GA --> LC
-    AF --> LC
-    CLI --> LC
+flowchart TD
+    S[LeetCode GraphQL API] --> I[Fetch daily challenge]
+    I --> V[Validate and normalize metadata]
+    V --> M[Match tags against configured focus topics]
+    M --> DB[(PostgreSQL)]
+    DB --> P[problems]
+    DB --> T[tags]
+    DB --> PT[problem_tags]
+    DB --> PM[problem_matches]
+    M --> MD[Generate Markdown archive]
+    M --> C{Focus topic matched?}
+    C -- Yes --> E[Priority email]
+    C -- No --> SK[Skip email]
+    L[Local Python CLI] --> I
+    A[Airflow scheduled DAG] --> I
+    A --> R[(pipeline_runs)]
 ```
 
----
+## Engineering concepts demonstrated
 
-## 📁 Repository Structure
+- GraphQL API ingestion with HTTP timeout and response handling.
+- Tag matching and transformation using configurable focus topics.
+- Relational modelling for problems, tags, matches, and pipeline run history.
+- Idempotent upserts keyed by problem date and conflict-safe relationship inserts.
+- Airflow scheduling and task retries.
+- Dockerized execution with PostgreSQL.
+- Markdown archive generation and conditional SMTP notification.
+
+## Data model
+
+| Table | Purpose |
+|---|---|
+| `problems` | One daily challenge record, metadata, description, tags, and match flag |
+| `tags` | Unique tag dictionary |
+| `problem_tags` | Relationship between problems and all tags |
+| `problem_matches` | Relationship between problems and matched focus tags |
+| `pipeline_runs` | Start/end time, status, processed-record count, and failure details |
+
+`problems.problem_date` is the natural key for a daily challenge. Composite keys in relationship tables prevent duplicate links.
+
+## Repository layout
 
 ```text
-leetcode-pulse/
-├── .github/
-│   └── workflows/
-│       └── leetcode-tracker.yaml   # GitHub Actions daily automated cron
-├── dags/
-│   └── notify_leetcode.py          # Apache Airflow DAG (TaskFlow API)
+.
+├── dags/notify_leetcode.py
+├── daily_challenges/       # generated Markdown output
+├── docs/
+├── sql/
 ├── src/
-│   ├── __init__.py
-│   ├── config.py                   # Focus topics & environment variables
-│   ├── leetcode_client.py          # GraphQL query client & topic matching
-│   ├── markdown_builder.py         # Markdown cleaning & generator
-│   ├── notifier.py                 # HTML Email (SMTP) & Discord webhooks
-│   └── main.py                     # Unified standalone CLI entrypoint
-├── daily_challenges/               # Auto-committed problem archives (.md)
-├── docker-compose.yaml             # 1-click Dockerized Airflow setup
+│   ├── config.py
+│   ├── leetcode_client.py
+│   ├── main.py
+│   ├── markdown_builder.py
+│   ├── notifier.py
+│   └── storage.py
+├── tests/
+├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
-├── .env.example
-├── .gitignore
 └── README.md
 ```
 
----
+## Configuration
 
-## ⚡ Quickstart
+Create `.env` locally and never commit it. Example shape (use your own credentials):
 
-### Option A: Serverless GitHub Actions (100% Free, Zero Hosting)
+```dotenv
+POSTGRES_DB=leetmeknow
+POSTGRES_USER=leetmeknow
+POSTGRES_PASSWORD=replace_with_local_password
+DATABASE_URL=postgresql+psycopg2://leetmeknow:replace_with_local_password@localhost:5433/leetmeknow
+SMTP_USER=
+SMTP_PASSWORD=
+NOTIFICATION_EMAIL=
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+OUTPUT_DIR=daily_challenges
+```
 
-1. **Fork or Push** this repository to your GitHub account.
-2. Go to **Settings** > **Secrets and variables** > **Actions** > **New repository secret** and add:
-   * `SMTP_USER`: Your Gmail address (e.g. `your_email@gmail.com`)
-   * `SMTP_PASSWORD`: Your 16-character [Gmail App Password](https://myaccount.google.com/apppasswords)
-   * `NOTIFICATION_EMAIL`: Where you want to receive alerts
-   * `DISCORD_WEBHOOK_URL` *(Optional)*: Discord channel webhook URL
-3. In repository **Settings** > **Actions** > **General** > **Workflow permissions**, select **"Read and write permissions"** (allows bot auto-commits).
-4. GitHub Actions will now automatically run every day at **00:30 UTC (6:00 AM IST)**!
+Local Python connects through `localhost:5433`. Inside Docker, Airflow should use the Compose hostname `postgres` and container port `5432`.
 
----
+## Run locally
 
-### Option B: Apache Airflow (Local / Cloud VPS)
+After dependencies are installed and the schema is applied:
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/samyakzer0/leetcode-pulse.git
-   cd leetcode-pulse
-   ```
-
-2. **Copy environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your SMTP credentials
-   ```
-
-3. **Run with Docker Compose:**
-   ```bash
-   docker compose up -d
-   ```
-   Open `http://localhost:8080` to access the Airflow Web UI!
-
-4. **Or run with local Airflow:**
-   ```bash
-   export AIRFLOW_HOME=$(pwd)
-   airflow dags test notify_leetcode
-   ```
-
----
-
-### Option C: Run as Standalone Script
-
-```bash
-pip install -r requirements.txt
+```powershell
 python -m src.main
 ```
 
----
+This calls the real LeetCode API and may send an email if a focus topic matches.
 
-## ⚙️ Configuration
+## Run with Docker and Airflow
 
-You can customize your focus topics in `src/config.py` (or `dags/notify_leetcode.py`):
-
-```python
-USER_TARGET_TAGS = {
-    "Dynamic Programming",
-    "Graph",
-    "Two Pointers",
-    "Binary Search",
-    "Sliding Window",
-    "Array",
-    "Greedy",
-    "Tree",
-}
+```powershell
+docker compose config --quiet
+docker compose up -d --build airflow-standalone
+docker compose ps
+docker exec leetpulse-airflow airflow dags list
+docker exec leetpulse-airflow airflow dags list-import-errors
 ```
 
----
+Open `http://localhost:8080` for the Airflow UI. A full DAG test executes the real pipeline and may send an email:
 
-## 📄 License
+```powershell
+docker exec leetpulse-airflow airflow dags test notify_leetcode 2026-10-12
+```
 
-This project is licensed under the [MIT License](LICENSE).
+## Unit tests
+
+The included unit tests use Python's standard `unittest` framework and mock the pipeline's external dependencies:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+A separate development-database integration test should verify repeat-save idempotency. Never run destructive schema or volume reset commands against your working database.
+
+## Operational checks
+
+```powershell
+docker compose ps
+docker compose logs --tail 100 airflow-standalone
+docker exec leetpulse-airflow airflow dags list-import-errors
+```
+
+Review recent `pipeline_runs` rows to verify status and inspect failure messages.
+
+## Known limitations and follow-up work
+
+- SMTP and database writes are separate side effects. A retry after an ambiguous SMTP failure can send a duplicate notification; track notification status independently before claiming exactly-once delivery.
+- Unit tests do not replace database integration tests or an actual Airflow execution.
+- No performance numbers are claimed here; record metrics only after measuring actual runs.
+
+## Resume summary
+
+**LeetMeKnow — Automated Data Engineering Pipeline**  
+*Python, PostgreSQL, Apache Airflow, Docker, SQLAlchemy, GraphQL*
+
+- Built a daily ingestion pipeline that fetches LeetCode challenge metadata, matches topic tags to configurable learning goals, and generates Markdown archives and priority email alerts.
+- Modelled challenge and tag data in PostgreSQL with idempotent upserts, normalized tag relationships, and pipeline-run history.
+- Orchestrated the shared Python pipeline using Apache Airflow in Docker and verified end-to-end ingestion, persistence, archive generation, and email delivery.
+
+Keep only claims that remain accurate in your current branch and that you can explain in an interview.
