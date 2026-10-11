@@ -1,25 +1,54 @@
-version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16
+    container_name: leetmeknowdb
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-leetmeknow}
+      POSTGRES_USER: ${POSTGRES_USER:-leetmeknow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   airflow-standalone:
-    image: apache/airflow:2.10.0-python3.11
+    build: .
+    image: leetmeknow-airflow:local
     container_name: leetpulse-airflow
     restart: always
     env_file:
       - .env
     environment:
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - NOTIFICATION_EMAIL=${NOTIFICATION_EMAIL}
-      - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
-      - SMTP_PORT=${SMTP_PORT:-587}
-     
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL}
+      SMTP_SERVER: ${SMTP_SERVER:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-leetmeknow}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-leetmeknow}
+
+      PYTHONPATH: /opt/airflow
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./daily_challenges:/opt/airflow/daily_challenges
     ports:
       - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     command: airflow standalone
+
+volumes:
+  postgres_data:
